@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/nats-io/nats.go"
+	"log"
 	"os"
 	"sync"
 )
@@ -11,69 +11,40 @@ var usage = "Usage \n\n" +
 	"emit:             nats [channel] [message]\n" +
 	"subscribe:        nats [channel]\n"
 
-func handlePanic() string {
-	fmt.Print(usage)
-	os.Exit(0)
-
-	return ""
-}
-
 func handleError(err error) {
 	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func getActionType() string {
-	if len(os.Args) == 2 {
-		return "s"
-	}
-
-	if len(os.Args) == 3 {
-		return "e"
-	}
-
-	return handlePanic()
-}
-
-func subscribe() {
-	nc, connectionError := nats.Connect(nats.DefaultURL)
-	handleError(connectionError)
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-
-	if _, err := nc.Subscribe(os.Args[1], func(m *nats.Msg) {
-		fmt.Println(string(m.Data))
-		wg.Done()
-	}); err != nil {
-		handleError(err)
-	}
-
-	wg.Wait()
-}
-
-func emit() {
-	nc, connectionError := nats.Connect(nats.DefaultURL)
-	handleError(connectionError)
-
-	defer nc.Close()
-
-	if err := nc.Publish(os.Args[1], []byte(os.Args[2])); err != nil {
-		handleError(err)
+		log.Fatal(err)
 	}
 }
 
 func main() {
-	action := getActionType()
+	nc, connectionError := nats.Connect(nats.DefaultURL)
+	handleError(connectionError)
 
-	switch action {
-	case "s":
-		subscribe()
-		break
+	if len(os.Args) < 2 {
+		log.Print(usage)
+		os.Exit(0)
+	}
 
-	case "e":
-		emit()
-		break
+	if len(os.Args) == 3 {
+		defer nc.Close()
+
+		if err := nc.Publish(os.Args[1], []byte(os.Args[2])); err != nil {
+			handleError(err)
+		}
+	}
+
+	if len(os.Args) == 2 {
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+
+		if _, err := nc.Subscribe(os.Args[1], func(m *nats.Msg) {
+			log.Println(string(m.Data))
+			wg.Done()
+		}); err != nil {
+			handleError(err)
+		}
+
+		wg.Wait()
 	}
 }
