@@ -1,11 +1,13 @@
 # nats-cli
 
-Command lint tool for debug nats.io
+Command line tool for debug [nats.io](https://nats.io)
 
 ### Installation
-- `wget https://github.com/iknpx/nats-cli/raw/master/nats-cli -O /usr/local/bin/nats`
-- `chmod a+x /usr/local/bin/nats`
+1. `wget https://github.com/iknpx/nats-cli/raw/master/nats-cli -O /usr/local/bin/nats`
+2. `chmod a+x /usr/local/bin/nats`
 
-### Usage
-- `emit:             nats [channel] [message]`
-- `subscribe:        nats [channel]`
+#### emit
+`nats [channel] [message]`
+
+#### subscribe
+`nats [channel]`
